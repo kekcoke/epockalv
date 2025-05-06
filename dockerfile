@@ -17,8 +17,8 @@ COPY . .
 RUN npm run build
 
 # Use Nginx to serve the application
-FROM nginx 
-EXPOSE 80
-
+FROM nginx:alpine
 # Copy the build files from the previous stage
 COPY --from=build /src/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
