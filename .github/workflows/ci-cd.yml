@@ -21,8 +21,35 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate deployment packages
-        run: zip -r epockalv-deploy.zip . -x '*.git*'
+      - name: Build application (Ignore ESLint errors)
+        env:
+          CI: false
+          ESLINT_NO_DEV_ERRORS: true
+        run: npm run build
+
+      - name: Setup .ebextensions
+        run: |
+          # Create the .ebextensions directory
+          mkdir -p .ebextensions
+          
+          # Create the staticfiles.config file with the required content
+          cat > .ebextensions/staticfiles.config << 'EOL'
+          option_settings:
+            aws:elasticbeanstalk:container:nodejs: 
+              NodeCommand: ""
+            aws:elasticbeanstalk:container:nodejs:staticfiles:
+              /: /
+          EOL
+          
+          # Verify the file was created correctly
+          ls -la .ebextensions/
+          cat .ebextensions/staticfiles.config
+
+      - name: Create deployment deployment package
+        run: |
+          cp -r .ebextensions build/
+          cd build 
+          zip -r ../epockalv-deploy.zip .
 
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v21
