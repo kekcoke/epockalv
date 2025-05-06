@@ -13,43 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build application (Ignore ESLint errors)
-        env:
-          CI: false
-          ESLINT_NO_DEV_ERRORS: true
-        run: npm run build
-
-      - name: Setup .ebextensions
-        run: |
-          # Create the .ebextensions directory
-          mkdir -p .ebextensions
-          
-          # Create the staticfiles.config file with the required content
-          cat > .ebextensions/staticfiles.config << 'EOL'
-          option_settings:
-            aws:elasticbeanstalk:container:nodejs: 
-              NodeCommand: ""
-            aws:elasticbeanstalk:container:nodejs:staticfiles:
-              /: /
-          EOL
-          
-          # Verify the file was created correctly
-          ls -la .ebextensions/
-          cat .ebextensions/staticfiles.config
-
-      - name: Create deployment deployment package
-        run: |
-          cp -r .ebextensions build/
-          cd build 
-          zip -r ../epockalv-deploy.zip .
+      - name: Generate deployment packages
+        run: zip -r epockalv-deploy.zip . -x '*.git*'
 
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v21
